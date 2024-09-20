@@ -1,0 +1,35 @@
+﻿@page "/products"
+@using Supplier_A.Model
+@inject HttpClient http
+
+<h3>Product List</h3>
+
+<div class="row">
+    @foreach (var product in Products)
+    {
+        <div class="col-md-6">
+            <div class="card">
+                @if (!string.IsNullOrEmpty(product.ImageUrl))
+                {
+                    <img class="card-img-top" src="https://localhost:7282/api/product/image/@Path.GetFileName(product.ImageUrl)" alt="Product Image" />
+                }
+                <div class="card-body">
+                    <h5 class="card-title">@product.Name</h5>
+                    <p class="card-text">Price: @product.Price</p>
+                    <p class="card-text">Quantity: @product.Quantity</p>
+                    <a href="/cart/@product.Id" class="btn btn-primary">Buy</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<ProductModel> Products = new List<ProductModel>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Products = await http.GetFromJsonAsync<List<ProductModel>>("https://localhost:7282/api/product");
+        await base.OnInitializedAsync();
+    }
+}

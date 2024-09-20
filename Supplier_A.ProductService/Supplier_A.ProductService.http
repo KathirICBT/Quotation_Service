@@ -1,0 +1,6 @@
+@Supplier_A.ProductService_HostAddress = http://localhost:5171
+
+GET {{Supplier_A.ProductService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,80 @@
+﻿@page "/add-product"
+@using Supplier_A.Model
+@inject HttpClient Http
+@inject IJSRuntime JsRuntime
+
+<h3>Add Product</h3>
+
+<EditForm Model="product" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="Name">Name</label>
+        <InputText id="Name" class="form-control" @bind-Value="product.Name" />
+    </div>
+
+    <div class="form-group">
+        <label for="Price">Price</label>
+        <InputNumber id="Price" class="form-control" @bind-Value="product.Price" />
+    </div>
+
+    <div class="form-group">
+        <label for="Quantity">Quantity</label>
+        <InputNumber id="Quantity" class="form-control" @bind-Value="product.Quantity" />
+    </div>
+
+    <div class="form-group">
+        <label for="Image">Product Image</label>
+        <InputFile id="Image" class="form-control" OnChange="HandleFileSelected" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Add Product</button>
+</EditForm>
+
+@code {
+    private ProductModel product = new ProductModel();
+    private IBrowserFile? selectedFile;
+
+    private async Task HandleValidSubmit()
+    {
+        var content = new MultipartFormDataContent();
+
+        // Add form fields
+        content.Add(new StringContent(product.Name), "Name");
+        content.Add(new StringContent(product.Price.ToString()), "Price");
+        content.Add(new StringContent(product.Quantity.ToString()), "Quantity");
+
+        // Add file if selected
+        if (selectedFile != null)
+        {
+            var fileStream = selectedFile.OpenReadStream();
+            var fileContent = new StreamContent(fileStream);
+            content.Add(fileContent, "file", selectedFile.Name);
+        }
+
+        try
+        {
+            var response = await Http.PostAsync("https://localhost:7282/api/product", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Product added successfully!");
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                await JsRuntime.InvokeVoidAsync("alert", $"Error: {errorContent}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", $"Exception: {ex.Message}");
+        }
+    }
+
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+    }
+}
